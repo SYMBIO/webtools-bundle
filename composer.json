@@ -1,0 +1,26 @@
+{
+    "name": "symbio/webtools-bundle",
+    "type": "symfony-bundle",
+    "description": "SYMBIO WebtoolsBundle",
+    "keywords": ["sitemap", "touch", "facebook", "scrape"],
+    "homepage": "http://www.symbiodigital.com/",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SYMBIO Developers",
+            "email": "dev@symbiodigital.com",
+            "homepage": "http://www.symbiodigital.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "fabpot/goutte": "2.*"
+    },
+    "require-dev": {
+    },
+    "suggest": {
+    },
+    "autoload": {
+        "psr-4": { "Symbio\\WebtoolsBundle\\": "" }
+    }
+}

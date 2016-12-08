@@ -1,0 +1,2 @@
+parameters:
+    symbio_webtools.crawler.class: Symbio\WebtoolsBundle\Service\Crawler

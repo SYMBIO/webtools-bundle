@@ -1,0 +1,5 @@
+services:
+    symbio_webtools.crawler:
+        class: %symbio_webtools.crawler.class%
+        arguments:
+            - @service_container
