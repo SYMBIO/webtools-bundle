@@ -3,12 +3,13 @@
 namespace Symbio\WebtoolsBundle\Command;
 
 use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Loads initial data
  */
-class TouchCommand extends CreateIndexCommand
+class TouchCommand extends ProviderCommand
 {
     /**
      * @see Command
@@ -18,11 +19,20 @@ class TouchCommand extends CreateIndexCommand
         $this
             ->setDefinition(array())
             ->addArgument('url', InputArgument::REQUIRED, 'Site to crawl')
-            ->addOption('depth', null, InputOption::VALUE_OPTIONAL, 'The depth to crawl to (default is all)', false)
             ->setName('symbio:webtools:touch')
             ->setDescription('Touch a website')
         ;
-        $this->defaultParameters['dont-clean'] = true;
-        $this->defaultParameters['indexing'] = false;
+    }
+
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $siteUrl = $input->getArgument('url');
+
+        $provider = $this->getProvider($output);
+        $provider->touch($siteUrl, true);
     }
 }

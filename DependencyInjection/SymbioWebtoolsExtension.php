@@ -30,5 +30,8 @@ class SymbioWebtoolsExtension extends Extension
         $loader->load('parameters.yml');
 
         $container->setParameter(self::ROOT_NAME . '.' . Crawler::USER_AGENT_PARAM, $config[Crawler::USER_AGENT_PARAM]);
+        $container->setParameter(self::ROOT_NAME . '.' . Crawler::EXTRACT_SELECTORS_PARAM, $config[Crawler::EXTRACT_SELECTORS_PARAM]);
+        $container->setParameter(self::ROOT_NAME . '.' . Configuration::FACEBOOK_CLIENT_ID_PARAM, $config[Configuration::FACEBOOK_CLIENT_ID_PARAM]);
+        $container->setParameter(self::ROOT_NAME . '.' . Configuration::FACEBOOK_CLIENT_SECRET_PARAM, $config[Configuration::FACEBOOK_CLIENT_SECRET_PARAM]);
     }
 }

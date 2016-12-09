@@ -3,3 +3,9 @@ services:
         class: %symbio_webtools.crawler.class%
         arguments:
             - @service_container
+
+    symbio_webtools.provider:
+        class: %symbio_webtools.provider.class%
+        arguments:
+            - @service_container
+            - @symbio_webtools.crawler

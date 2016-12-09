@@ -7,8 +7,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
-class Crawler {
+class Crawler extends BaseService
+{
     const USER_AGENT_PARAM = 'user_agent';
+    const EXTRACT_SELECTORS_PARAM = 'extract_selectors';
 
     protected $baseUrl;
     protected $protocol;
@@ -21,21 +23,25 @@ class Crawler {
     protected $parameters;
 
     protected $pages;
+    protected $statusCodes = array();
 
     public function __construct(ContainerInterface $container) {
         $this->container = $container;
 
         $this->parameters = array(
             self::USER_AGENT_PARAM => $container->getParameter('symbio_webtools.'.self::USER_AGENT_PARAM),
+            self::EXTRACT_SELECTORS_PARAM => $container->getParameter('symbio_webtools.'.self::EXTRACT_SELECTORS_PARAM),
         );
     }
 
     /**
-     * crawl url and return pages
+     * Crawl url and return pages
+     *
      * @param string $baseUrl URL to crawl
+     * @param bool $printStatusCodes Whether print URLs sorted by status codes
      * @return array
      */
-    public function extractPages($baseUrl) {
+    public function extractPages($baseUrl, $printStatusCodes = false) {
         \error_reporting(E_ALL & ~E_NOTICE);
 
         // http protocol not included, prepend it to the base url
@@ -69,6 +75,10 @@ class Crawler {
 
         $this->crawlPages($this->baseUrl, false);
 
+        if ($printStatusCodes) {
+            $this->printStatusCode();
+        }
+
         $this->log(sprintf('Crawling finished at %s', date('d.m.Y H:i:s')));
 
         return $this->pages;
@@ -83,7 +93,7 @@ class Crawler {
         if (!$url || (isset($this->pages[$url]) && isset($this->pages[$url]['visited']) && $this->pages[$url]['visited'])) return;
 
         $client = new Client();
-        $client->setHeader('User-Agent', $this->parameters['user_agent']);
+        $client->setHeader('User-Agent', $this->parameters[self::USER_AGENT_PARAM]);
 
         try {
             $call = $client->request('GET', $url);
@@ -94,6 +104,8 @@ class Crawler {
             $this->log(sprintf("%s: %s", $statusCode, $url));
             $this->log(sprintf("Error page retrieving (%s)", $e->getMessage()));
         }
+
+        $this->storeStatusCode($url, $statusCode);
 
         if ($statusCode >= 400) {
             return;
@@ -107,6 +119,8 @@ class Crawler {
         if (strpos($contentType, ';') !== false) {
             $contentType = substr($contentType, 0, strpos($contentType, ';'));
         }
+
+        $this->pages[$url]['content_type'] = $contentType;
 
         switch($contentType) {
             case 'text/html':
@@ -131,38 +145,44 @@ class Crawler {
     protected function extractLinks(DomCrawler &$dom, $ancestorUrl) {
         $links = array();
 
-        $dom->filterXPath('html/body')->each(function(DomCrawler $node, $i) use (&$links) {
-            $nodeText = trim($node->text());
-            $nodeUrl = trim($node->attr('href'));
+        foreach($this->parameters[self::EXTRACT_SELECTORS_PARAM] as $selector) {
+            $dom->filterXPath($selector)->each(function(DomCrawler $node, $i) use (&$links) {
+                $nodeText = trim($node->text());
 
-            if (strpos($nodeUrl, 'mailto:') !== false || strpos($nodeUrl, 'tel:') !== false || strpos($nodeUrl, 'phone:') !== false) return;
-
-            $url = $this->normalizeLink($nodeUrl);
-
-            if (!isset($this->pages[$url])) {
-                if (!isset($links[$url])) {
-                    $links[$url] = array(
-                        'original_url' => array(),
-                        'links_text' => array(),
-                        'frequency' => 0,
-                    );
+                $nodeUrl = trim($node->attr('href'));
+                if (!$nodeUrl) {
+                    $nodeUrl = trim($node->attr('src'));
                 }
 
-                $links[$url]['original_url'][$nodeUrl] = $nodeUrl;
-                $links[$url]['links_text'][$nodeText] = $nodeText;
+                if (strpos($nodeUrl, 'mailto:') !== false || strpos($nodeUrl, 'tel:') !== false || strpos($nodeUrl, 'phone:') !== false) return;
 
-                if ($this->checkIfCrawlable($nodeUrl)) {
-                    $links[$url]['absolute_url'] = $nodeUrl;
-                    $links[$url]['external_link'] = $this->isPageExternal($url);
-                } else {
-                    $links[$url]['dont_visit'] = true;
-                    $links[$url]['external_link'] = false;
+                $url = $this->normalizeLink($nodeUrl);
+
+                if ($url && !isset($this->pages[$url])) {
+                    if (!isset($links[$url])) {
+                        $links[$url] = array(
+                            'original_url' => array(),
+                            'links_text' => array(),
+                            'frequency' => 0,
+                        );
+                    }
+
+                    $links[$url]['original_url'][$nodeUrl] = $nodeUrl;
+                    $links[$url]['links_text'][$nodeText] = $nodeText;
+
+                    if ($this->checkIfCrawlable($nodeUrl)) {
+                        $links[$url]['absolute_url'] = $nodeUrl;
+                        $links[$url]['external_link'] = $this->isPageExternal($url);
+                    } else {
+                        $links[$url]['dont_visit'] = true;
+                        $links[$url]['external_link'] = false;
+                    }
+
+                    $links[$url]['visited'] = false;
+                    $links[$url]['frequency']++;
                 }
-
-                $links[$url]['visited'] = false;
-                $links[$url]['frequency']++;
-            }
-        });
+            });
+        }
 
         if (isset($links[$ancestorUrl])) { // if page is linked to itself, ex. homepage
             $links[$ancestorUrl]['visited'] = true; // avoid cyclic loop
@@ -218,8 +238,8 @@ class Crawler {
         $url = preg_replace('/#.*$/', '', $url);
 
         // relative link
-        if (!preg_match("/^http(s)?/", $url)) {
-            $url = sprintf('%s://$s%s', $this->protocol, $this->host, $url);
+        if ($url && !preg_match("/^http(s)?/", $url)) {
+            $url = sprintf('%s://%s%s', $this->protocol, $this->host, $url);
         }
 
         return $url;
@@ -258,26 +278,54 @@ class Crawler {
     }
 
     /**
-     * set logger
-     * @param OutputInterface $logger
+     * @return array
      */
-    public function setLogger(OutputInterface $logger) {
-        $this->logger = $logger;
+    public function getParameters()
+    {
+        return $this->parameters;
     }
 
     /**
-     * log message
-     * @param string $message
-     * @param boolean $newLine Print new line at the message end
+     * @param array $parameters
      */
-    protected function log($message, $newLine = true) {
-        if ($this->logger) {
-            switch(get_class($this->logger)) {
-                case 'Symfony\Component\Console\Output\BufferedOutput':
-                case 'Symfony\Component\Console\Output\ConsoleOutput':
-                    $this->logger->{$newLine?'writeln':'write'}($message);
-                    break;
+    public function setParameters($parameters)
+    {
+        $this->parameters = $parameters;
+    }
+
+    /**
+     * @param $url
+     * @param $statusCode
+     */
+    public function storeStatusCode($url, $statusCode)
+    {
+        if (!isset($this->statusCodes[$statusCode])) $this->statusCodes[$statusCode] = array();
+
+        if (!in_array($url, $this->statusCodes[$statusCode])) {
+            $this->statusCodes[$statusCode][] = $url;
+        }
+    }
+
+    /**
+     * Print URLs sorted by status codes to the output
+     */
+    public function printStatusCode()
+    {
+        $stats = array();
+
+        $this->log('Status codes:');
+
+        ksort($this->statusCodes);
+        foreach($this->statusCodes as $statusCode => $urls) {
+            $stats[] = sprintf('%s: %s', $statusCode, count($urls));
+            if ($statusCode > 200) {
+                sort($urls);
+                foreach($urls as $url) {
+                    $this->log(sprintf('%s: %s', $statusCode, $url));
+                }
             }
         }
+
+        $this->log(implode(', ', $stats));
     }
 }
