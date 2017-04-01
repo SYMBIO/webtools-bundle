@@ -18,7 +18,7 @@ class FacebookScrapeCommand extends ProviderCommand
     protected function configure()
     {
         $this
-            ->setDefinition(array())
+            ->setDefinition([])
             ->addArgument('url', InputArgument::REQUIRED, 'Site to crawl')
             ->addOption('status-codes', null, InputOption::VALUE_NONE, 'Whether print status codes')
             ->setName('symbio:webtools:facebook:scrape')
@@ -29,6 +29,7 @@ class FacebookScrapeCommand extends ProviderCommand
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @return void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {

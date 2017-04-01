@@ -3,6 +3,7 @@
 namespace Symbio\WebtoolsBundle\DependencyInjection;
 
 use Symbio\WebtoolsBundle\Service\Crawler;
+use Symbio\WebtoolsBundle\Service\Thumbnailer;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
@@ -31,7 +32,15 @@ class SymbioWebtoolsExtension extends Extension
 
         $container->setParameter(self::ROOT_NAME . '.' . Crawler::USER_AGENT_PARAM, $config[Crawler::USER_AGENT_PARAM]);
         $container->setParameter(self::ROOT_NAME . '.' . Crawler::EXTRACT_SELECTORS_PARAM, $config[Crawler::EXTRACT_SELECTORS_PARAM]);
+
         $container->setParameter(self::ROOT_NAME . '.' . Configuration::FACEBOOK_CLIENT_ID_PARAM, $config[Configuration::FACEBOOK_CLIENT_ID_PARAM]);
         $container->setParameter(self::ROOT_NAME . '.' . Configuration::FACEBOOK_CLIENT_SECRET_PARAM, $config[Configuration::FACEBOOK_CLIENT_SECRET_PARAM]);
+
+        $container->setParameter(self::ROOT_NAME . '.' . Thumbnailer::PRIVATE_IPS_PARAM, $config[Thumbnailer::PRIVATE_IPS_PARAM]);
+        $container->setParameter(self::ROOT_NAME . '.' . Thumbnailer::BASEDIR_APP_PARAM, $config[Thumbnailer::BASEDIR_APP_PARAM]);
+        $container->setParameter(self::ROOT_NAME . '.' . Thumbnailer::BASEDIR_RATIO_PARAM, $config[Thumbnailer::BASEDIR_RATIO_PARAM]);
+        $container->setParameter(self::ROOT_NAME . '.' . Thumbnailer::BASEDIR_GRAYSCALE_PARAM, $config[Thumbnailer::BASEDIR_GRAYSCALE_PARAM]);
+        $container->setParameter(self::ROOT_NAME . '.' . Thumbnailer::BASEDIRS_PARAM, $config[Thumbnailer::BASEDIRS_PARAM]);
+        $container->setParameter(self::ROOT_NAME . '.' . Thumbnailer::SIZE_DIR_PATTERN_PARAM, $config[Thumbnailer::SIZE_DIR_PATTERN_PARAM]);
     }
 }

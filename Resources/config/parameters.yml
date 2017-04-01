@@ -1,3 +1,4 @@
 parameters:
     symbio_webtools.crawler.class: Symbio\WebtoolsBundle\Service\Crawler
     symbio_webtools.provider.class: Symbio\WebtoolsBundle\Service\Provider
+    symbio_webtools.thumbnailer.class: Symbio\WebtoolsBundle\Service\Thumbnailer

@@ -9,3 +9,13 @@ services:
         arguments:
             - @service_container
             - @symbio_webtools.crawler
+
+    symbio_webtools.thumbnailer:
+        class: %symbio_webtools.thumbnailer.class%
+        arguments:
+            - @kernel
+            - @request_stack
+            - %symbio_webtools.thumbnailer_basedir_ratio%
+            - %symbio_webtools.thumbnailer_basedir_grayscale%
+            - %symbio_webtools.thumbnailer_basedir_app%
+            - %symbio_webtools.thumbnailer_sizedir_pattern%

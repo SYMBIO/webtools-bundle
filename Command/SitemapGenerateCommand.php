@@ -18,7 +18,7 @@ class SitemapGenerateCommand extends ProviderCommand
     protected function configure()
     {
         $this
-            ->setDefinition(array())
+            ->setDefinition([])
             ->addArgument('url', InputArgument::REQUIRED, 'Site to crawl')
             ->addOption('path', null, InputOption::VALUE_OPTIONAL, 'Absolute path to XML from the project root dir', 'web/')
             ->addOption('filename', null, InputOption::VALUE_OPTIONAL, 'Name of XML file', 'sitemap.xml')
@@ -31,6 +31,7 @@ class SitemapGenerateCommand extends ProviderCommand
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @return void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {

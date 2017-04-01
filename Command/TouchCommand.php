@@ -17,7 +17,7 @@ class TouchCommand extends ProviderCommand
     protected function configure()
     {
         $this
-            ->setDefinition(array())
+            ->setDefinition([])
             ->addArgument('url', InputArgument::REQUIRED, 'Site to crawl')
             ->setName('symbio:webtools:touch')
             ->setDescription('Touch a website')
@@ -27,6 +27,7 @@ class TouchCommand extends ProviderCommand
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @return void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
